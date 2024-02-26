@@ -37,6 +37,7 @@ int http_conn::epoll_fd = -1;
 void http_conn::process()
 {
 	HTTP_CODE parse_ret = parse();
+    // 没有请求，再次设置epoll
 	if(NO_REQUEST == parse_ret)
 	{
 		modfd(EPOLLIN);
@@ -50,8 +51,7 @@ void http_conn::process()
 	{
 		SHOW_ERROR
 		close_conn();
-	}
-	else
+	}else // 解析成功，epoll监听写
 		modfd(EPOLLOUT);
 }
 
@@ -65,23 +65,28 @@ bool http_conn::add_headers(int content_len)
     return add_content_length(content_len) && add_linger() &&
            add_blank_line();
 }
+
 bool http_conn::add_content_length(int content_len)
 {
     return add_response("Content-Length:%d\r\n", content_len);
 }
+
 bool http_conn::add_content_type()
 {
     return add_response("Content-Type:%s\r\n", "text/html");
 }
+
 bool http_conn::add_linger()
 {
     return add_response("Connection:%s\r\n", 
 				(keep_alive == true) ? "keep-alive" : "close");
 }
+
 bool http_conn::add_blank_line()
 {
     return add_response("%s", "\r\n");
 }
+
 bool http_conn::add_content(const char *content)
 {
     return add_response("%s", content);
@@ -106,6 +111,7 @@ bool http_conn::add_response(const char *format, ...)
     return true;
 }
 
+// 根据指令将网页写入写缓存
 bool http_conn::process_write(HTTP_CODE ret)
 {
 	switch (ret)
@@ -173,6 +179,7 @@ bool http_conn::process_write(HTTP_CODE ret)
     return true;
 }
 
+// 将数据读到read_buffer
 bool http_conn::read_once()
 {
 	if(read_indx + 1 >= READ_BUFFER_SIZE)
@@ -427,6 +434,7 @@ http_conn::HTTP_CODE http_conn::respond()
     return FILE_REQUEST;
 }
 
+// http解析
 http_conn::HTTP_CODE http_conn::parse()
 {
 	LINE_STATE content_state = LINE_OK, request_or_header_state;
@@ -523,6 +531,7 @@ void http_conn::show_read_buffer()
 	printf("read_buffer:---------------------------------\n%s", read_buffer);
 	printf("read_buffer end ----------------------------------------\n");
 }
+
 void http_conn::show_write_buffer()
 {
 	printf("write_buffer:---------------------------------\n%swrite_indx:%d\n", 
@@ -599,6 +608,8 @@ bool http_conn::write()
 }
 
 http_conn::http_conn() = default;
+
+// 初始化该客户连接：设置epoll，地址，根目录
 void http_conn::init(int sockfd, const sockaddr_in &addr, const char *root)
 {
 	client_fd = sockfd;
@@ -608,6 +619,7 @@ void http_conn::init(int sockfd, const sockaddr_in &addr, const char *root)
 	init();
 }
 
+// 初始化一些成员变量
 void http_conn::init()
 {
 	bytes_to_send = 0;
@@ -635,6 +647,7 @@ void http_conn::init()
     memset(real_file, '\0', FILENAME_LEN);
 }
 
+// 将该客户端的fd加入epoll监听
 void http_conn::addfd()
 {
     set_no_blocking(client_fd);

@@ -34,7 +34,7 @@ int timer::epoll_fd = -1;
 timer::timer() {};
 timer::~timer(){}
 
-
+// 每过一个TIMESLOT就运行一次，检查有没有client过期
 void timer_heap::tick()
 {
 	time_t now;
@@ -110,7 +110,7 @@ timer* timer_heap::top()
 {
 	return heap[1];
 }
-
+// 移除pos位置的定时器
 bool timer_heap::out(int pos)
 {
 	if(pos >= end_indx)
@@ -138,6 +138,7 @@ bool timer_heap::adjust(timer* t)
 	return false;
 }
 
+// 定时器移除
 void timer_heap::del(timer* t)
 {
 	for(int i = 1; i < end_indx; ++i)

@@ -27,12 +27,12 @@ class web_server
 {
 public:
 	//timer的tick如果监测到cfd超时，需要设置http_conn的timer_flag
-	static char root[128];
-	static http_conn users[MAX_CLIENT];
+	static char root[128]; // 网站根目录
+	static http_conn users[MAX_CLIENT]; // 客户端连接
 private:
 	int cur_client = 0;
-	timer timers[MAX_CLIENT];
-	timer_heap t_heap;
+	timer timers[MAX_CLIENT];	// 定时器，每个客户端连接一个定时器，用于超时处理
+	timer_heap t_heap;		// 定时器堆，用于超时处理
 	
 	//线程池	
 	pthread_pool &pool;
@@ -45,11 +45,11 @@ private:
 	int sql_port = 4321;
 
 	//epool相关参数
-	char IP[16]; //x
-	uint16_t port = 0;
+	char IP[16]; // 服务器IP地址
+	uint16_t port = 0; // 服务器端口
 	int listen_fd = -1;
 	int epoll_fd = -1;
-	struct epoll_event events[MAX_EVENT_NUMBER];
+	struct epoll_event events[MAX_EVENT_NUMBER]; // 事件数组，epoll_wait()将填充这个数组
 	char signals[1024] = "";
 
 	void deal_listenfd();
@@ -57,9 +57,11 @@ private:
 	void deal_client_read(int fd);
 	void deal_client_write(int fd);
 public:
+	// sql连接池初始化
 	void sql_pool_init();
 	void event_listen();
 	void event_loop();
+	
 	web_server(const char *ip, int port);
 	~web_server();
 };

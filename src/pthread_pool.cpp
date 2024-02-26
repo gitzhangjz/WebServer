@@ -45,6 +45,7 @@ bool pthread_pool::append(http_conn* task, bool ready_for_send)
 	return true;
 }
 
+// 每个线程轮询任务队列，有任务就执行
 void pthread_pool::run()
 {
 	http_conn *task = NULL;
@@ -59,7 +60,7 @@ void pthread_pool::run()
 
 		cond_not_full.signal();
 		mutex.unlock();
-		//拿到任务
+		//拿到读任务
 		if(task->ready_for_send == false)
 		{
 			if (task->read_once())
